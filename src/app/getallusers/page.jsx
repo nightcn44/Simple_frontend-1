@@ -38,11 +38,13 @@ export default function GetAllUsersPage() {
   }, []);
 
   const openModal = (user) => {
-    setSelectedUser(user);
-    setForm({ username: user.username, email: user.email, password: "" });
-    setFormError("");
-    setMessage("");
-    setIsModalOpen(true);
+    if (user) {
+      setSelectedUser(user);
+      setForm({ username: user.username, email: user.email, password: "" });
+      setFormError("");
+      setMessage("");
+      setIsModalOpen(true);
+    }
   };
 
   const closeModal = () => {
@@ -69,12 +71,12 @@ export default function GetAllUsersPage() {
     e.preventDefault();
     setUpdateLoading(true);
     try {
-      const response = await axios.put(`/user/${selectedUser._id}`, form);
+      await axios.put(`/user/${selectedUser._id}`, form);
       setUsers(
-        users.map((u) => (u._id === selectedUser._id ? response.data : u))
+        users.map((u) => (u._id === selectedUser._id ? { ...u, ...form } : u))
       );
       showAlert("success", "Update successful");
-      setTimeout(closeModal, 1500); // ปิด modal หลังจากอัปเดตสำเร็จ
+      setTimeout(closeModal, 1500);
     } catch (err) {
       const msg = err.response?.data?.message || err.message;
       setFormError(msg);
@@ -88,6 +90,7 @@ export default function GetAllUsersPage() {
     try {
       await axios.delete(`/user/${id}`);
       setUsers(users.filter((user) => user._id !== id));
+      closeDeleteModal();
     } catch (err) {
       alert(
         "Unable to delete user: " + (err.response?.data?.message || err.message)
@@ -98,6 +101,14 @@ export default function GetAllUsersPage() {
   const showAlert = (type, text) => {
     setAlertModal({ show: true, type, text });
   };
+
+  useEffect(() => {
+    if (alertModal.show) {
+      setTimeout(() => {
+        setAlertModal({ ...alertModal, show: false });
+      }, 10000);
+    }
+  }, [alertModal]);
 
   if (loading || error) {
     return (
@@ -209,13 +220,6 @@ export default function GetAllUsersPage() {
                 >
                   {updateLoading ? "Updating..." : "Update"}
                 </button>
-
-                {formError && (
-                  <p className="text-red-500 text-center">{formError}</p>
-                )}
-                {message && (
-                  <p className="text-green-500 text-center">{message}</p>
-                )}
               </form>
               <button
                 onClick={closeModal}
@@ -239,18 +243,7 @@ export default function GetAllUsersPage() {
               </p>
               <div className="flex justify-between">
                 <button
-                  onClick={async () => {
-                    try {
-                      await axios.delete(`/user/${userToDelete._id}`);
-                      setUsers(users.filter((u) => u._id !== userToDelete._id));
-                      closeDeleteModal();
-                    } catch (err) {
-                      alert(
-                        "Unable to delete user: " +
-                          (err.response?.data?.message || err.message)
-                      );
-                    }
-                  }}
+                  onClick={() => handleDelete(userToDelete._id)}
                   className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                 >
                   Yes, Delete
@@ -266,6 +259,7 @@ export default function GetAllUsersPage() {
           </div>
         )}
       </div>
+
       {alertModal.show && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-md text-center max-w-md w-full">
