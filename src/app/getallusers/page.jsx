@@ -9,6 +9,8 @@ export default function GetAllUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,6 +46,16 @@ export default function GetAllUsersPage() {
     setIsModalOpen(false);
     setSelectedUser(null);
     setForm({ username: "", email: "", password: "" });
+  };
+
+  const openDeleteModal = (user) => {
+    setUserToDelete(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setUserToDelete(null);
+    setIsDeleteModalOpen(false);
   };
 
   const handleChange = (e) => {
@@ -123,7 +135,7 @@ export default function GetAllUsersPage() {
                       Update
                     </button>
                     <button
-                      onClick={() => handleDelete(user._id)}
+                      onClick={() => openDeleteModal(user)}
                       className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
                     >
                       Delete
@@ -137,7 +149,7 @@ export default function GetAllUsersPage() {
 
         {/* Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-opacity-70 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/90 bg-opacity-70 flex items-center justify-center z-50">
             <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
               <h1 className="text-3xl font-bold mb-6 text-center text-black">
                 Update User
@@ -201,6 +213,45 @@ export default function GetAllUsersPage() {
               >
                 Close
               </button>
+            </div>
+          </div>
+        )}
+
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 bg-black/90 bg-opacity-70 flex items-center justify-center z-50">
+            <div className="bg-white p-8 rounded shadow-md w-full max-w-md text-black">
+              <h2 className="text-2xl font-bold mb-4 text-center">
+                Confirm Delete
+              </h2>
+              <p className="mb-6 text-center">
+                Are you sure you want to delete user{" "}
+                <b>{userToDelete?.username}</b>?
+              </p>
+              <div className="flex justify-between">
+                <button
+                  onClick={async () => {
+                    try {
+                      await axios.delete(`/user/${userToDelete._id}`);
+                      setUsers(users.filter((u) => u._id !== userToDelete._id));
+                      closeDeleteModal();
+                    } catch (err) {
+                      alert(
+                        "Unable to delete user: " +
+                          (err.response?.data?.message || err.message)
+                      );
+                    }
+                  }}
+                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                >
+                  Yes, Delete
+                </button>
+                <button
+                  onClick={closeDeleteModal}
+                  className="text-gray-700 underline px-4 py-2"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}
