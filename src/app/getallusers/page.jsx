@@ -11,8 +11,11 @@ export default function GetAllUsersPage() {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-
-  // Modal states
+  const [alertModal, setAlertModal] = useState({
+    show: false,
+    type: "",
+    text: "",
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [form, setForm] = useState({ username: "", email: "", password: "" });
@@ -70,11 +73,13 @@ export default function GetAllUsersPage() {
       setUsers(
         users.map((u) => (u._id === selectedUser._id ? response.data : u))
       );
-      setMessage("Update successful");
+      showAlert("success", "Update successful");
       setTimeout(closeModal, 1500); // ปิด modal หลังจากอัปเดตสำเร็จ
-      setUpdateLoading(false);
     } catch (err) {
-      setFormError(err.response?.data?.message || err.message);
+      const msg = err.response?.data?.message || err.message;
+      setFormError(msg);
+      showAlert("error", msg);
+    } finally {
       setUpdateLoading(false);
     }
   };
@@ -88,6 +93,10 @@ export default function GetAllUsersPage() {
         "Unable to delete user: " + (err.response?.data?.message || err.message)
       );
     }
+  };
+
+  const showAlert = (type, text) => {
+    setAlertModal({ show: true, type, text });
   };
 
   if (loading || error) {
@@ -257,6 +266,26 @@ export default function GetAllUsersPage() {
           </div>
         )}
       </div>
+      {alertModal.show && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-md text-center max-w-md w-full">
+            <h2
+              className={`text-xl font-bold mb-4 ${
+                alertModal.type === "error" ? "text-red-600" : "text-green-600"
+              }`}
+            >
+              {alertModal.type === "error" ? "Error" : "Success"}
+            </h2>
+            <p className="mb-4 text-black">{alertModal.text}</p>
+            <button
+              onClick={() => setAlertModal({ ...alertModal, show: false })}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
