@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+body {
+  background-image: url('https://files.123freevectors.com/wp-content/original/116378-abstract-dark-blue-blurred-bokeh-background-image.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
