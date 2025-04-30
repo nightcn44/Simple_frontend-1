@@ -75,6 +75,7 @@ export default function GetAllUsersPage() {
       setUpdateLoading(false);
     } catch (err) {
       setFormError(err.response?.data?.message || err.message);
+      setUpdateLoading(false);
     }
   };
 
